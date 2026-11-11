@@ -7,40 +7,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        :root {
-            --brand-green: #0b6643;
-            --bg-sand: #fbf9f5;
-        }
-        body {
-            background-color: var(--bg-sand);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            color: #212529;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .card-auth {
-            max-width: 420px;
-            width: 100%;
-            background: #ffffff;
-            padding: 32px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        }
-        .btn-brand {
-            background-color: var(--brand-green);
-            color: #ffffff;
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 600;
-        }
-        .btn-brand:hover {
-            background-color: #084e33;
-            color: #ffffff;
-        }
+        :root { --brand-green: #0b6643; --bg-sand: #fbf9f5; }
+        body { background-color: var(--bg-sand); font-family: 'Segoe UI', system-ui, sans-serif; color: #212529; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .card-auth { max-width: 420px; width: 100%; background: #ffffff; padding: 32px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .btn-brand { background-color: var(--brand-green); color: #ffffff; border: none; padding: 12px; border-radius: 12px; font-weight: 600; }
+        .btn-brand:hover { background-color: #084e33; color: #ffffff; }
     </style>
 </head>
 <body>
@@ -72,7 +43,7 @@
         <form action="{{ route('password.email') }}" method="POST">
             @csrf
             <div class="mb-3">
-                <label class="form-label small fw-semibold text-secondary">Email Registered</label>
+                <label class="form-label small fw-semibold text-secondary">Email Terdaftar</label>
                 <div class="input-group">
                     <input type="email" name="email" class="form-control border-end-0" style="border-radius: 12px 0 0 12px;" placeholder="solusibusana@gmail.com" value="{{ old('email') }}" required>
                     <span class="input-group-text bg-white border-start-0 text-muted rounded-end-3"><i class="bi bi-envelope"></i></span>
