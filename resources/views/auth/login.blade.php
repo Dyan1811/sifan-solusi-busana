@@ -106,8 +106,10 @@
                     <div class="mb-3">
                         <label class="form-label small fw-semibold text-secondary">Password</label>
                         <div class="input-group">
-                            <input type="password" name="password" class="form-control border-end-0 @error('password') is-invalid @enderror" placeholder="••••••••••••" required>
-                            <span class="input-group-text bg-white border-start-0 text-muted rounded-end-3"><i class="bi bi-eye-slash"></i></span>
+                            <input type="password" name="password" id="inputPassword" class="form-control border-end-0 @error('password') is-invalid @enderror" placeholder="••••••••••••" required>
+                            <button type="button" class="input-group-text bg-white border-start-0 text-muted rounded-end-3" id="togglePassword" style="cursor: pointer;">
+                                <i class="bi bi-eye-slash" id="iconToggle"></i>
+                            </button>
                         </div>
                         @error('password')
                             <div class="text-danger small mt-1" style="font-size: 0.8rem;">{{ $message }}</div>
@@ -141,17 +143,28 @@
 </div>
 
 <script>
-function togglePassword() {
-    const input = document.getElementById('inputPassword');
-    const icon = document.getElementById('toggleIcon');
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.replace('bi-eye', 'bi-eye-slash');
-    } else {
-        input.type = 'password';
-        icon.classList.replace('bi-eye-slash', 'bi-eye');
-    }
-}
+    document.addEventListener('DOMContentLoaded', function () {
+        const togglePassword = document.getElementById('togglePassword');
+        const inputPassword = document.getElementById('inputPassword');
+        const iconToggle = document.getElementById('iconToggle');
+
+        if (togglePassword && inputPassword && iconToggle) {
+            togglePassword.addEventListener('click', function () {
+                // Ubah tipe input antara password dan text
+                const type = inputPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+                inputPassword.setAttribute('type', type);
+
+                // Ganti ikon mata terbuka / tertutup
+                if (type === 'text') {
+                    iconToggle.classList.remove('bi-eye-slash');
+                    iconToggle.classList.add('bi-eye');
+                } else {
+                    iconToggle.classList.remove('bi-eye');
+                    iconToggle.classList.add('bi-eye-slash');
+                }
+            });
+        }
+    });
 </script>
 </body>
 </html>
