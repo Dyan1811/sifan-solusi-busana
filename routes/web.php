@@ -5,6 +5,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\HistoryController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 
 // Autentikasi Pemilik Usaha
 Route::middleware('guest')->group(function () {
@@ -30,4 +32,10 @@ Route::middleware('auth')->group(function () {
     // Riwayat Orderan
     Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
     Route::post('/orders/{id}/archive', [HistoryController::class, 'archive'])->name('orders.archive');
+
+    // Lupa password
+    Route::get('forgot-password', [ForgotPasswordController::class, 'create'])->name('password.request');
+    Route::post('forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
+    Route::get('reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
+    Route::post('reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
 });

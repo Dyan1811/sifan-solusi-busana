@@ -107,12 +107,12 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 small">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="remember" id="remember">
-                            <label class="form-check-label small text-muted" for="remember">Ingat saya</label>
+                            <input type="checkbox" name="remember" class="form-check-input" id="remember">
+                            <label class="form-check-label text-muted" for="remember">Ingat saya</label>
                         </div>
-                        <a href="#" class="small text-success text-decoration-none fw-semibold">Lupa password?</a>
+                        <a href="{{ route('password.request') }}" class="text-success text-decoration-none fw-semibold">Lupa password?</a>
                     </div>
 
                     <button type="submit" class="btn btn-brand w-100 rounded-3 mb-4">

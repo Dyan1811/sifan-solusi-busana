@@ -594,8 +594,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             <label class="form-label fw-semibold small">Foto Penanda Pakaian</label>
                             <div class="border rounded p-3 text-center bg-light">
                                 <i class="bi bi-camera fs-2 text-muted d-block mb-2"></i>
-                                <input type="file" name="items[${i}][foto]" class="form-control form-control-sm" accept="image/*">
-                                <small class="text-muted extra-small mt-1 d-block">JPG / PNG, maks. 5 MB.</small>
+                                
+                                <!-- TAMBAHKAN capture="environment" DI BARIS INPUT INI -->
+                                <input type="file" name="items[${i}][foto]" class="form-control form-control-sm" accept="image/*" capture="environment">
+                                
+                                <small class="text-muted extra-small mt-1 d-block">Potret langsung atau pilih dari galeri.</small>
                             </div>
                         </div>
                     </div>
