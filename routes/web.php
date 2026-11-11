@@ -10,7 +10,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 
 // Autentikasi Pemilik Usaha
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
@@ -33,9 +33,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
     Route::post('/orders/{id}/archive', [HistoryController::class, 'archive'])->name('orders.archive');
 
-    // Lupa password
+    // Rute Lupa Password
     Route::get('forgot-password', [ForgotPasswordController::class, 'create'])->name('password.request');
     Route::post('forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
     Route::get('reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
     Route::post('reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
-});
+}); 

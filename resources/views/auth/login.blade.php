@@ -89,22 +89,29 @@
 
                 <form action="{{ route('login') }}" method="POST">
                     @csrf
+                    
+                    <!-- Input Email -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Email</label>
+                        <label class="form-label small fw-semibold text-secondary">Email</label>
                         <div class="input-group">
-                            <input type="email" name="email" class="form-control" placeholder="solusibusana@gmail.com" value="{{ old('email') }}" required autofocus>
-                            <span class="input-group-text bg-white text-muted"><i class="bi bi-envelope"></i></span>
+                            <input type="email" name="email" class="form-control border-end-0 @error('email') is-invalid @enderror" placeholder="solusibusana@gmail.com" value="{{ old('email') }}" required>
+                            <span class="input-group-text bg-white border-start-0 text-muted rounded-end-3"><i class="bi bi-envelope"></i></span>
                         </div>
+                        @error('email')
+                            <div class="text-danger small mt-1" style="font-size: 0.8rem;">{{ $message }}</div>
+                        @enderror
                     </div>
 
+                    <!-- Input Password -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Password</label>
+                        <label class="form-label small fw-semibold text-secondary">Password</label>
                         <div class="input-group">
-                            <input type="password" name="password" id="inputPassword" class="form-control" placeholder="••••••••••••" required>
-                            <button class="btn btn-outline-secondary bg-white text-muted" type="button" onclick="togglePassword()">
-                                <i class="bi bi-eye" id="toggleIcon"></i>
-                            </button>
+                            <input type="password" name="password" class="form-control border-end-0 @error('password') is-invalid @enderror" placeholder="••••••••••••" required>
+                            <span class="input-group-text bg-white border-start-0 text-muted rounded-end-3"><i class="bi bi-eye-slash"></i></span>
                         </div>
+                        @error('password')
+                            <div class="text-danger small mt-1" style="font-size: 0.8rem;">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-4 small">
@@ -115,9 +122,10 @@
                         <a href="{{ route('password.request') }}" class="text-success text-decoration-none fw-semibold">Lupa password?</a>
                     </div>
 
-                    <button type="submit" class="btn btn-brand w-100 rounded-3 mb-4">
-                        Masuk ke Sistem <i class="bi bi-arrow-right ms-1"></i>
+                    <button type="submit" class="btn btn-brand w-100 d-flex align-items-center justify-content-center gap-2">
+                        <span>Masuk ke Sistem</span> <i class="bi bi-arrow-right"></i>
                     </button>
+                </form>
 
                     <div class="text-center small text-muted mb-4">
                         Belum punya akun? <a href="{{ route('register') }}" class="text-success fw-bold text-decoration-none">Daftar usaha Anda</a>
