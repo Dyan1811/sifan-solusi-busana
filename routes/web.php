@@ -1,22 +1,61 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
+use App\Models\User;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\HistoryController;
-use App\Http\Controllers\Auth\ForgotPasswordController;
-use App\Http\Controllers\Auth\ResetPasswordController;
 
-// Autentikasi Pemilik Usaha
+// --------------------------------------------------------------------------
+// RUTE UNTUK PENGGUNA YANG BELUM LOGIN (GUEST)
+// --------------------------------------------------------------------------
 Route::middleware('guest')->group(function () {
+    // Autentikasi Login & Register
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+
+    // Tampilan Form Lupa Password
+    Route::get('forgot-password', function () {
+        return view('auth.forgot-password');
+    })->name('password.request');
+
+    // Proses Kirim Email Pemulihan Password dengan Validasi Lengkap
+    Route::post('forgot-password', function (Request $request) {
+        // 1. Validasi Format Email
+        $request->validate([
+            'email' => 'required|email',
+        ], [
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Format email tidak valid (contoh: nama@domain.com).',
+        ]);
+
+        // 2. Cek Apakah Email Terdaftar di Database
+        $userExists = User::where('email', $request->email)->exists();
+        if (!$userExists) {
+            return back()->withInput()->withErrors([
+                'email' => 'Alamat email ini belum terdaftar dalam sistem kami.'
+            ]);
+        }
+
+        // 3. Kirim Link Reset Password
+        $status = Password::sendResetLink($request->only('email'));
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('status', 'Tautan pemulihan password telah dikirim ke email Anda.')
+            : back()->withInput()->withErrors(['email' => __($status)]);
+    })->name('password.email');
 });
 
+// --------------------------------------------------------------------------
+// RUTE UNTUK PENGGUNA YANG SUDAH LOGIN (AUTH)
+// --------------------------------------------------------------------------
 Route::middleware('auth')->group(function () {
+    // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     // Dashboard Kanban Antrean
@@ -32,10 +71,4 @@ Route::middleware('auth')->group(function () {
     // Riwayat Orderan
     Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
     Route::post('/orders/{id}/archive', [HistoryController::class, 'archive'])->name('orders.archive');
-
-    // Rute Lupa Password
-    Route::get('forgot-password', [ForgotPasswordController::class, 'create'])->name('password.request');
-    Route::post('forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
-    Route::get('reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
-    Route::post('reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
-}); 
+});
