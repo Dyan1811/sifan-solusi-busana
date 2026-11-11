@@ -462,19 +462,31 @@ document.addEventListener('DOMContentLoaded', function () {
             let step2Valid = true;
             let firstInvalidTab = -1;
 
+            // Validasi Jenis Pakaian
             const garmentInputs = document.querySelectorAll('.garment-type-input');
             garmentInputs.forEach((input, idx) => {
                 if (!input.value.trim()) {
                     input.classList.add('is-invalid');
                     step2Valid = false;
-                    if (firstInvalidTab === -1) {
-                        firstInvalidTab = idx;
-                    }
+                    if (firstInvalidTab === -1) firstInvalidTab = idx;
                 } else {
                     input.classList.remove('is-invalid');
                 }
             });
 
+            // Validasi Catatan Permak / Detail Jahit (Wajib Diisi)
+            const notesInputs = document.querySelectorAll('.garment-notes-input');
+            notesInputs.forEach((input, idx) => {
+                if (!input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    step2Valid = false;
+                    if (firstInvalidTab === -1) firstInvalidTab = idx;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+
+            // Jika ada yang belum diisi, pindahkan fokus tab ke pakaian yang belum valid
             if (!step2Valid) {
                 if (firstInvalidTab !== -1) {
                     const tabTrigger = new bootstrap.Tab(document.getElementById(`item-tab-${firstInvalidTab}`));
@@ -560,8 +572,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <div class="invalid-feedback">Jenis pakaian wajib diisi.</div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold small">Catatan Permak / Detail Jahit</label>
-                                <textarea name="items[${i}][catatan]" class="form-control" rows="3" placeholder="Contoh: Pendekkan bagian bawah 4 cm. Pertahankan lebar dan jahitan asli."></textarea>
+                                <label class="form-label fw-semibold small">Catatan Permak / Detail Jahit <span class="text-danger">*</span></label>
+                                <textarea name="items[${i}][catatan]" class="form-control garment-notes-input" rows="3" placeholder="Contoh: Pendekkan bagian bawah 4 cm. Pertahankan lebar dan jahitan asli." required></textarea>
+                                <div class="invalid-feedback">Catatan permak / detail jahit wajib diisi.</div>
                             </div>
                             <div>
                                 <label class="form-label fw-semibold small">Tingkat Kesulitan / Estimasi Durasi</label>
@@ -606,7 +619,7 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }
 
-        document.querySelectorAll('.garment-type-input').forEach(input => {
+        document.querySelectorAll('.garment-notes-input').forEach(input => {
             input.addEventListener('input', function() {
                 if (this.value.trim() !== '') {
                     this.classList.remove('is-invalid');
