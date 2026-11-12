@@ -14,12 +14,16 @@ class OrderController extends Controller
 {
     public function checkCapacity(Request $request)
     {
+        $date = $request->input('date', Carbon::now('Asia/Jakarta')->toDateString());
         $date = $request->input('date', Carbon::today()->toDateString());
         $newDuration = (int) $request->input('new_duration', 0);
         $userId = auth()->id();
 
         $existingMinutes = Pesanan::where('id_user', $userId)
-            ->whereDate('tenggat_pengambilan', $date)
+            ->where(function ($q) use ($date) {
+                $q->whereDate('tenggat_pengambilan', $date)
+                ->orWhereDate('tanggal_pesanan', $date);
+            })
             ->whereIn('status_pesanan', ['antrean', 'diproses', 'selesai'])
             ->with('details')->get()->sum(fn($o) => $o->details->sum('estimasi_waktu'));
 
@@ -56,6 +60,7 @@ class OrderController extends Controller
         }
 
         // Cek Kuota Pengerjaan Harian (Batas 8 Jam / 480 Menit)
+        $targetDate = Carbon::parse($request->tenggat_pengambilan, 'Asia/Jakarta')->toDateString();
         $targetDate = Carbon::parse($request->tenggat_pengambilan)->toDateString();
         $existingMinutes = Pesanan::where('id_user', auth()->id())
             ->whereDate('tenggat_pengambilan', $targetDate)
@@ -92,7 +97,7 @@ class OrderController extends Controller
                 'nomor_pesanan' => $nomorPesanan,
                 'id_user' => auth()->id(),
                 'id_pelanggan' => $pelanggan->id_pelanggan,
-                'tanggal_pesanan' => Carbon::now(),
+                'tanggal_pesanan' => Carbon::now('Asia/Jakarta'),
                 'tenggat_pengambilan' => $request->tenggat_pengambilan,
                 'status_pesanan' => 'antrean',
                 'jumlah_pakaian' => count($request->items)

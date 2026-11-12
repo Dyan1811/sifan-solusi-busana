@@ -13,13 +13,16 @@ class KanbanController extends Controller
     public function index(Request $request)
     {
         $userId = auth()->id();
-        $today = Carbon::today()->toDateString();
+        // Gunakan zona waktu WIB (Asia/Jakarta) dan Bahasa Indonesia
+        $nowWib = Carbon::now('Asia/Jakarta')->locale('id');
+        $today = $nowWib->toDateString();
+        $tanggalHariIni = $nowWib->translatedFormat('l, d F Y');
         $search = $request->input('search');
 
         $query = Pesanan::where('id_user', $userId)->with(['pelanggan', 'details']);
 
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nomor_pesanan', 'like', "%{$search}%")
                   ->orWhereHas('pelanggan', fn($p) => $p->where('nama_pelanggan', 'like', "%{$search}%"));
             });
@@ -32,12 +35,25 @@ class KanbanController extends Controller
         $selesai = $allOrders->where('status_pesanan', 'selesai');
         $siapDiambil = $allOrders->where('status_pesanan', 'siap_diambil');
 
+        // Hitung kapasitas harian: pesanan yang tenggatnya hari ini ATAU baru masuk hari ini
         $todayAllocatedMinutes = Pesanan::where('id_user', $userId)
-            ->whereDate('tenggat_pengambilan', $today)
+            ->where(function ($q) use ($today) {
+                $q->whereDate('tenggat_pengambilan', $today)
+                  ->orWhereDate('tanggal_pesanan', $today);
+            })
             ->whereIn('status_pesanan', ['antrean', 'diproses', 'selesai'])
-            ->with('details')->get()->sum(fn($o) => $o->details->sum('estimasi_waktu'));
+            ->with('details')
+            ->get()
+            ->sum(fn($o) => $o->details->sum('estimasi_waktu'));
 
-        return view('kanban.index', compact('antrean', 'diproses', 'selesai', 'siapDiambil', 'todayAllocatedMinutes'));
+        return view('kanban.index', compact(
+            'antrean',
+            'diproses',
+            'selesai',
+            'siapDiambil',
+            'todayAllocatedMinutes',
+            'tanggalHariIni'
+        ));
     }
 
     public function updateOrderStatus(Request $request, $id)

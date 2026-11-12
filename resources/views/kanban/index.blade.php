@@ -10,10 +10,10 @@
 <!-- Card Informasi Tanggal (Mobile & Desktop) -->
 <div class="bg-success-subtle p-3 rounded-3 mb-3 border border-success-subtle">
     <div class="d-flex align-items-center text-success fw-semibold mb-1">
-        <i class="bi bi-calendar-event me-2"></i> {{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM YYYY') }}
+        <i class="bi bi-calendar-event me-2"></i> {{ $tanggalHariIni }}
     </div>
     <small class="text-muted d-block" style="font-size: 0.8rem;">
-        {{ $antrean->count() + $diproses->count() + $selesai->count() }} pesanan aktif &bull; {{ $antrean->count() }} tenggat hari ini
+        {{ $antrean->count() + $diproses->count() + $selesai->count() }} pesanan aktif &bull; {{ $antrean->count() }} dalam antrean
     </small>
 </div>
 
@@ -122,9 +122,9 @@
                         </button>
                     </div>
 
-                    <!-- Modal Detail Pengerjaan & Checklist -->
+                    <!-- Modal Detail Pengerjaan & Checklist (Hanya di Kolom Diproses) -->
                     <div class="modal fade" id="modalDetail{{ $item->id_pesanan }}" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <h5 class="modal-title fw-bold">Detail Pesanan ({{ $item->nomor_pesanan }})</h5>
@@ -136,14 +136,27 @@
                                     <hr>
                                     <h6 class="fw-bold">Daftar Jahitan:</h6>
                                     @foreach($item->details as $detail)
-                                        <div class="p-2 border rounded mb-2 d-flex align-items-center justify-content-between">
-                                            <div>
-                                                <strong class="d-block">{{ $detail->jenis_pakaian }}</strong>
-                                                <small class="text-muted">{{ $detail->catatan }} ({{ $detail->estimasi_waktu }}m)</small>
+                                        <div class="p-2 border rounded mb-2">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div>
+                                                    <strong class="d-block">{{ $detail->jenis_pakaian }}</strong>
+                                                    <small class="text-muted">{{ $detail->catatan }} ({{ $detail->estimasi_waktu }}m)</small>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input item-checkbox" type="checkbox" data-id="{{ $detail->id_detail }}" {{ $detail->status_pakaian === 'selesai' ? 'checked' : '' }}>
+                                                </div>
                                             </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input item-checkbox" type="checkbox" data-id="{{ $detail->id_detail }}" {{ $detail->status_pakaian === 'selesai' ? 'checked' : '' }}>
-                                            </div>
+
+                                            @if($detail->image_path)
+                                                <div class="mt-2 pt-2 border-top">
+                                                    <a href="{{ asset('storage/' . $detail->image_path) }}" target="_blank">
+                                                        <img src="{{ asset('storage/' . $detail->image_path) }}" alt="Foto {{ $detail->jenis_pakaian }}" class="img-fluid rounded border shadow-sm w-100" style="max-height: 200px; object-fit: cover;">
+                                                    </a>
+                                                    <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-zoom-in me-1"></i>Klik gambar untuk melihat ukuran penuh
+                                                    </small>
+                                                </div>
+                                            @endif
                                         </div>
                                     @endforeach
                                 </div>
@@ -591,7 +604,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         <label class="btn btn-outline-success w-100 p-2 text-center" for="diff_sedang_${i}">
                                             <div class="extra-small text-muted">Sedang</div>
                                             <strong class="d-block">30m</strong>
-                                        </label>
+                                        </label>    
                                     </div>
                                     <div class="col-4">
                                         <input type="radio" class="btn-check difficulty-input" name="items[${i}][tingkat_kesulitan]" id="diff_rumit_${i}" value="rumit" data-duration="60">
@@ -606,10 +619,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="col-md-5">
                             <label class="form-label fw-semibold small">Foto Penanda Pakaian</label>
                             <div class="border rounded p-3 text-center bg-light">
-                                <i class="bi bi-camera fs-2 text-muted d-block mb-2"></i>
+                                <img id="preview-foto-${i}" src="" alt="Preview Foto" class="img-fluid rounded mb-2 d-none border shadow-sm" style="max-height: 140px; object-fit: cover;">
+                                <i id="icon-kamera-${i}" class="bi bi-camera fs-2 text-muted d-block mb-2"></i>
                                 
-                                <!-- TAMBAHKAN capture="environment" DI BARIS INPUT INI -->
-                                <input type="file" name="items[${i}][foto]" class="form-control form-control-sm" accept="image/*" capture="environment">
+                                <input type="file" name="items[${i}][foto]" class="form-control form-control-sm garment-photo-input" data-index="${i}" accept="image/*" capture="environment">
                                 
                                 <small class="text-muted extra-small mt-1 d-block">Potret langsung atau pilih dari galeri.</small>
                             </div>
@@ -619,10 +632,20 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }
 
-        document.querySelectorAll('.garment-notes-input').forEach(input => {
-            input.addEventListener('input', function() {
-                if (this.value.trim() !== '') {
-                    this.classList.remove('is-invalid');
+        document.querySelectorAll('.garment-photo-input').forEach(input => {
+            input.addEventListener('change', function() {
+                const idx = this.dataset.index;
+                const previewImg = document.getElementById(`preview-foto-${idx}`);
+                const cameraIcon = document.getElementById(`icon-kamera-${idx}`);
+
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        previewImg.classList.remove('d-none');
+                        if (cameraIcon) cameraIcon.classList.add('d-none');
+                    };
+                    reader.readAsDataURL(this.files[0]);
                 }
             });
         });
@@ -669,6 +692,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!inputTenggatPengambilan.value) {
             const now = new Date();
             now.setHours(17, 0, 0, 0);
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             inputTenggatPengambilan.value = now.toISOString().slice(0, 16);
         }
 
