@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use App\Models\User;
@@ -8,6 +7,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\HistoryController;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 // --------------------------------------------------------------------------
 // RUTE UNTUK PENGGUNA YANG BELUM LOGIN (GUEST)
@@ -49,6 +51,41 @@ Route::middleware('guest')->group(function () {
             ? back()->with('status', 'Tautan pemulihan password telah dikirim ke email Anda.')
             : back()->withInput()->withErrors(['email' => __($status)]);
     })->name('password.email');
+
+    // Halaman Form Input Password Baru (saat link reset diklik)
+    Route::get('/reset-password/{token}', function (string $token, Request $request) {
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $request->query('email'),
+        ]);
+    })->name('password.reset');
+
+    // Proses Simpan Password Baru ke Database
+    Route::post('/reset-password', function (Request $request) {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:6|confirmed',
+        ], [
+            'password.min' => 'Kata sandi baru minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                ])->setRememberToken(Str::random(60));
+
+                $user->save();
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('status', 'Kata sandi berhasil diperbarui! Silakan login.')
+            : back()->withInput($request->only('email'))->withErrors(['email' => __($status)]);
+    })->name('password.update');
 });
 
 // --------------------------------------------------------------------------
