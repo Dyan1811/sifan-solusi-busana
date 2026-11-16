@@ -2,14 +2,16 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Str;
 use App\Models\User;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\HistoryController;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 // --------------------------------------------------------------------------
 // RUTE UNTUK PENGGUNA YANG BELUM LOGIN (GUEST)
@@ -28,6 +30,15 @@ Route::middleware('guest')->group(function () {
 
     // Proses Kirim Email Pemulihan Password dengan Validasi Lengkap
     Route::post('forgot-password', function (Request $request) {
+        // Otomatis buat tabel password_reset_tokens jika belum ada di Railway
+        if (!Schema::hasTable('password_reset_tokens')) {
+            Schema::create('password_reset_tokens', function (Blueprint $table) {
+                $table->string('email')->primary();
+                $table->string('token');
+                $table->timestamp('created_at')->nullable();
+            });
+        }
+
         // 1. Validasi Format Email
         $request->validate([
             'email' => 'required|email',
