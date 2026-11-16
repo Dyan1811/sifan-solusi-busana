@@ -32,6 +32,14 @@
             </div>
 
             <div class="mb-3">
+                <label class="form-label small fw-semibold text-secondary">Nama Usaha Jahit</label>
+                <input type="text" name="nama_usaha" class="form-control @error('nama_usaha') is-invalid @enderror" placeholder="Solusi Busana" value="{{ old('nama_usaha') }}" required>
+                @error('nama_usaha')
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="mb-3">
                 <label class="form-label small fw-semibold text-secondary">Email</label>
                 <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="solusibusana@gmail.com" value="{{ old('email') }}" required>
                 @error('email')
