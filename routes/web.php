@@ -28,9 +28,8 @@ Route::middleware('guest')->group(function () {
         return view('auth.forgot-password');
     })->name('password.request');
 
-    // Proses Kirim Email Pemulihan Password dengan Validasi Lengkap
+    // Proses Kirim Email Pemulihan Password dengan Pesan Bahasa Indonesia
     Route::post('forgot-password', function (Request $request) {
-        // Otomatis buat tabel password_reset_tokens jika belum ada di Railway
         if (!Schema::hasTable('password_reset_tokens')) {
             Schema::create('password_reset_tokens', function (Blueprint $table) {
                 $table->string('email')->primary();
@@ -39,7 +38,6 @@ Route::middleware('guest')->group(function () {
             });
         }
 
-        // 1. Validasi Format Email
         $request->validate([
             'email' => 'required|email',
         ], [
@@ -47,7 +45,6 @@ Route::middleware('guest')->group(function () {
             'email.email' => 'Format email tidak valid (contoh: nama@domain.com).',
         ]);
 
-        // 2. Cek Apakah Email Terdaftar di Database
         $userExists = User::where('email', $request->email)->exists();
         if (!$userExists) {
             return back()->withInput()->withErrors([
@@ -55,15 +52,23 @@ Route::middleware('guest')->group(function () {
             ]);
         }
 
-        // 3. Kirim Link Reset Password
         $status = Password::sendResetLink($request->only('email'));
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', 'Tautan pemulihan password telah dikirim ke email Anda.')
-            : back()->withInput()->withErrors(['email' => __($status)]);
+        if ($status === Password::RESET_LINK_SENT) {
+            return back()->with('status', 'Tautan pemulihan kata sandi telah dikirim ke email Anda. Silakan periksa kotak masuk atau folder Spam.');
+        }
+
+        $errorMessages = [
+            Password::RESET_THROTTLED => 'Harap tunggu beberapa saat sebelum mencoba mengirim ulang tautan pemulihan.',
+            Password::INVALID_USER => 'Alamat email ini tidak ditemukan dalam sistem kami.',
+        ];
+
+        return back()->withInput()->withErrors([
+            'email' => $errorMessages[$status] ?? 'Gagal mengirim tautan pemulihan. Silakan coba lagi nanti.',
+        ]);
     })->name('password.email');
 
-    // Halaman Form Input Password Baru (saat link reset diklik)
+    // Halaman Form Input Password Baru (saat link reset di email diklik)
     Route::get('/reset-password/{token}', function (string $token, Request $request) {
         return view('auth.reset-password', [
             'token' => $token,
@@ -78,6 +83,7 @@ Route::middleware('guest')->group(function () {
             'email' => 'required|email',
             'password' => 'required|min:6|confirmed',
         ], [
+            'password.required' => 'Kata sandi baru wajib diisi.',
             'password.min' => 'Kata sandi baru minimal 6 karakter.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
         ]);
@@ -93,9 +99,19 @@ Route::middleware('guest')->group(function () {
             }
         );
 
-        return $status === Password::PASSWORD_RESET
-            ? redirect()->route('login')->with('status', 'Kata sandi berhasil diperbarui! Silakan login.')
-            : back()->withInput($request->only('email'))->withErrors(['email' => __($status)]);
+        if ($status === Password::PASSWORD_RESET) {
+            return redirect()->route('login')->with('status', 'Kata sandi berhasil diperbarui! Silakan masuk.');
+        }
+
+        $resetErrors = [
+            Password::INVALID_TOKEN => 'Tautan pemulihan kata sandi tidak valid atau sudah kedaluwarsa.',
+            Password::INVALID_USER => 'Alamat email tidak ditemukan dalam sistem kami.',
+            Password::RESET_THROTTLED => 'Terlalu banyak percobaan. Harap tunggu beberapa saat sebelum mencoba lagi.',
+        ];
+
+        return back()->withInput($request->only('email'))->withErrors([
+            'email' => $resetErrors[$status] ?? 'Gagal memperbarui kata sandi. Silakan ulangi permintaan lupa kata sandi.',
+        ]);
     })->name('password.update');
 });
 
